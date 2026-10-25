@@ -1,0 +1,14 @@
+# Secrets
+.env
+
+# Local state and personal Notion database ID
+.etat/
+.calls_database_id
+
+# Python
+.venv/
+__pycache__/
+*.pyc
+
+# macOS
+.DS_Store
