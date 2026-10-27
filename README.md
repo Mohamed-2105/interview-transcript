@@ -72,6 +72,7 @@ cp .env.example .env   # then fill in your keys
 | `GEMINI_API_KEY` | yes | Gemini API key |
 | `NOTION_TARGET` | yes | ID **or link** of the Notion database or page that receives the debriefs |
 | `CANDIDATE_NAME` | yes | First name of the person being interviewed. Used to tell them apart from the interviewer in the transcript, and in the debrief headings |
+| `HF_TOKEN` | no | Hugging Face token for speaker diarization. Accept the terms of [pyannote/speaker-diarization-community-1](https://huggingface.co/pyannote/speaker-diarization-community-1) first. Without it, transcripts have no speaker labels |
 | `CALLS_FOLDER` | no | Working folder (default `~/assistant-calls`), e.g. a synced Google Drive folder |
 
 Share the target with your integration in Notion (`•••` → *Connections*), otherwise the API can't see it.
@@ -122,5 +123,5 @@ The prompt (`PROMPT_DEBRIEF` in `calls_debrief/etapes/analyse.py`) and the field
 
 ## Limitations
 
-- Whisper doesn't identify speakers: Gemini infers who the candidate is from context. Subtitle files with speaker tags (`<v Name>`) give better results.
+- Speakers are detected by pyannote (`SPEAKER_00`, `SPEAKER_01`…): each Whisper segment goes to the speaker whose turns overlap it most. Gemini still works out from context which label is the candidate. A segment where the speaker changes mid-sentence goes entirely to one speaker. Without `HF_TOKEN`, Gemini infers speakers from the plain text alone.
 - In `.vtt`/`.srt` files, a line containing only digits is treated as a cue number and removed.

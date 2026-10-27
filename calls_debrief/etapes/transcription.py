@@ -2,7 +2,7 @@ import re
 from typing import Optional
 
 from calls_debrief import etat
-from calls_debrief.config import EXTENSIONS_AUDIO, MODELE_WHISPER
+from calls_debrief.config import EXTENSIONS_AUDIO, HF_TOKEN, MODELE_DIARISATION, MODELE_WHISPER
 
 # Chargement de FFmpeg pour la lecture des audios
 try:
@@ -13,8 +13,49 @@ except ImportError:
 
 try:
     import mlx_whisper
+    from mlx_whisper.audio import SAMPLE_RATE, load_audio
 except ImportError:
     mlx_whisper = None
+
+try:
+    import torch
+    from pyannote.audio import Pipeline
+except ImportError:
+    Pipeline = None
+
+def diariser(audio) -> list:
+    """Tours de parole pyannote [(début, fin, locuteur)], ou [] si la diarisation est indisponible."""
+    if Pipeline is None or not HF_TOKEN:
+        print("pyannote ou HF_TOKEN absent : transcription sans locuteurs.")
+        return []
+    pipeline = Pipeline.from_pretrained(MODELE_DIARISATION, token=HF_TOKEN)
+    if torch.backends.mps.is_available():
+        pipeline.to(torch.device("mps"))
+    sortie = pipeline({"waveform": torch.from_numpy(audio)[None], "sample_rate": SAMPLE_RATE})
+    # pyannote 4 : la version "exclusive" (un seul locuteur à la fois) s'aligne mieux sur Whisper
+    annotation = getattr(sortie, "exclusive_speaker_diarization", sortie)
+    return [(tour.start, tour.end, loc) for tour, _, loc in annotation.itertracks(yield_label=True)]
+
+def fusionner(segments: list, tours: list) -> str:
+    """Attribue à chaque segment Whisper le locuteur qui le recouvre le plus, et regroupe les répliques."""
+    lignes, precedent = [], None
+    for seg in segments:
+        recouvrements = {}
+        for debut, fin, loc in tours:
+            r = min(seg["end"], fin) - max(seg["start"], debut)
+            if r > 0:
+                recouvrements[loc] = recouvrements.get(loc, 0) + r
+        # Sans recouvrement (silence mal découpé), on garde le locuteur précédent
+        loc = max(recouvrements, key=recouvrements.get) if recouvrements else precedent or "INCONNU"
+        texte = seg["text"].strip()
+        if not texte:
+            continue
+        if loc == precedent:
+            lignes[-1] += " " + texte
+        else:
+            lignes.append(f"{loc} : {texte}")
+            precedent = loc
+    return "\n".join(lignes)
 
 def obtenir_transcript(chemin: str, cle: str) -> Optional[str]:
     """Retourne le texte du fichier (transcrit si audio), ou None s'il ne peut pas être traité."""
@@ -27,8 +68,11 @@ def obtenir_transcript(chemin: str, cle: str) -> Optional[str]:
             print("mlx_whisper non disponible, fichier ignoré.")
             return None
         print("Transcription locale via mlx-whisper (Apple Silicon)...")
-        res = mlx_whisper.transcribe(chemin, path_or_hf_repo=MODELE_WHISPER)
-        texte = res.get("text", "")
+        audio = load_audio(chemin)  # décodé une seule fois, partagé par Whisper et pyannote
+        res = mlx_whisper.transcribe(audio, path_or_hf_repo=MODELE_WHISPER)
+        print("Identification des locuteurs via pyannote...")
+        tours = diariser(audio)
+        texte = fusionner(res["segments"], tours) if tours else res.get("text", "")
         etat.ecrire_transcript_cache(cle, texte)
         return texte
 

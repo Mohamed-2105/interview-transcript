@@ -15,6 +15,7 @@ PROMPT_DEBRIEF = """Tu es un analyste d'entretiens neutre, rigoureux et objectif
 RÈGLE D'IDENTITÉ :
 - {nom_candidat} est TOUJOURS la personne interviewée, celle qui passe l'entretien.
 - Les autres voix sont les recruteurs ou managers qui mènent l'entretien.
+- Si la transcription est découpée en répliques préfixées par SPEAKER_00, SPEAKER_01…, ces étiquettes viennent d'une détection automatique des voix : déduis du contexte laquelle correspond à {nom_candidat}. Elles peuvent parfois se tromper sur une réplique courte.
 
 CONSIGNES DE FIDÉLITÉ (RÉPONSES DU CANDIDAT) :
 - Interdiction de sur-polir ou de transformer la façon de parler de {nom_candidat}.

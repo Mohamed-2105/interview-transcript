@@ -7,6 +7,8 @@ load_dotenv(os.path.join(DOSSIER_PROJET, ".env"))
 
 NOTION_TOKEN = os.getenv("NOTION_TOKEN")
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
+# Token Hugging Face (modèle pyannote à accès restreint) ; sans lui, transcription sans locuteurs
+HF_TOKEN = os.getenv("HF_TOKEN")
 # Prénom de la personne interviewée : sert à l'identifier dans la transcription et à personnaliser le débrief
 NOM_CANDIDAT = os.getenv("CANDIDATE_NAME", "").strip()
 # Base ou page Notion où créer les débriefs (ID ou lien) ; à défaut, l'ID enregistré dans .calls_database_id
@@ -22,4 +24,5 @@ EXTENSIONS_AUDIO = ('.m4a', '.mp3', '.wav')
 EXTENSIONS_TEXTE = ('.txt', '.vtt', '.srt')
 
 MODELE_WHISPER = "mlx-community/whisper-large-v3-turbo"
+MODELE_DIARISATION = "pyannote/speaker-diarization-community-1"
 MODELES_GEMINI = ["gemini-3.5-flash-lite", "gemini-3.8-flash"]
