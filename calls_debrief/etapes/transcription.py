@@ -18,6 +18,7 @@ except ImportError:
     mlx_whisper = None
 
 try:
+    import numpy as np
     import torch
     from pyannote.audio import Pipeline
 except ImportError:
@@ -32,7 +33,7 @@ def diariser(audio) -> list:
         pipeline = Pipeline.from_pretrained(MODELE_DIARISATION, token=HF_TOKEN)
         if torch.backends.mps.is_available():
             pipeline.to(torch.device("mps"))
-        sortie = pipeline({"waveform": torch.from_numpy(audio)[None], "sample_rate": SAMPLE_RATE})
+        sortie = pipeline({"waveform": torch.from_numpy(np.array(audio))[None], "sample_rate": SAMPLE_RATE})
     except Exception as e:
         # Accès refusé au modèle, réseau… : on ne jette pas la transcription Whisper déjà faite
         print(f"Diarisation impossible ({type(e).__name__}: {e}) : transcription sans locuteurs.")
