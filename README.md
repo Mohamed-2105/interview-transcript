@@ -99,7 +99,7 @@ Names are compared ignoring case, accents and special spaces (`Catégorie`, `cat
 
 ### Folders
 
-Set `CALLS_FOLDER` in `.env` to your own folder. The pipeline reads from `CALLS_FOLDER/01_A_Traiter` and archives to `CALLS_FOLDER/02_Archives`, and creates both if they don't exist.
+Set `CALLS_FOLDER` in `.env` to your own folder. The pipeline reads from `CALLS_FOLDER/01_A_Traiter` archives to `CALLS_FOLDER/02_Archives`, and writes each transcript as sent to Gemini (with speaker labels when diarization ran) to `CALLS_FOLDER/03_Transcripts/<file name>.txt`. All three are created if they don't exist.
 
 ## Usage
 

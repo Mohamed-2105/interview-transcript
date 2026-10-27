@@ -2,11 +2,11 @@ import os
 import traceback
 
 from calls_debrief import etat
-from calls_debrief.config import DOSSIER_A_TRAITER, DOSSIER_ARCHIVES, EXTENSIONS_AUDIO, EXTENSIONS_TEXTE, NOM_CANDIDAT
+from calls_debrief.config import DOSSIER_A_TRAITER, DOSSIER_ARCHIVES, DOSSIER_TRANSCRIPTS, EXTENSIONS_AUDIO, EXTENSIONS_TEXTE, NOM_CANDIDAT
 from calls_debrief.etat import cle_fichier
 from calls_debrief.etapes.transcription import obtenir_transcript
 from calls_debrief.etapes.analyse import analyser_transcript
-from calls_debrief.etapes.archivage import archiver
+from calls_debrief.etapes.archivage import archiver, sauvegarder_transcript
 from calls_debrief.notion.cible import CibleNotion, charger_cible
 from calls_debrief.notion.export import envoyer_debrief_vers_notion
 
@@ -25,6 +25,7 @@ def traiter_fichier(chemin: str, cible: CibleNotion):
         if not texte_transcript.strip():
             print("Fichier vide ou inexploitable. Ignoré.")
             return
+        sauvegarder_transcript(chemin, texte_transcript)
 
         # 2. Analyse
         print("Analyse candidat & Débrief en cours par Gemini...")
@@ -47,6 +48,7 @@ def lancer_pipeline_calls():
 
     os.makedirs(DOSSIER_A_TRAITER, exist_ok=True)
     os.makedirs(DOSSIER_ARCHIVES, exist_ok=True)
+    os.makedirs(DOSSIER_TRANSCRIPTS, exist_ok=True)
 
     cible = charger_cible()
 

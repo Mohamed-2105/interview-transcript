@@ -19,6 +19,8 @@ FICHIER_CIBLE_HERITE = os.path.join(DOSSIER_PROJET, ".calls_database_id")
 BASE_DRIVE = os.path.expanduser(os.getenv("CALLS_FOLDER", "~/assistant-calls"))
 DOSSIER_A_TRAITER = os.path.join(BASE_DRIVE, "01_A_Traiter")
 DOSSIER_ARCHIVES = os.path.join(BASE_DRIVE, "02_Archives")
+# Transcriptions telles qu'envoyées à Gemini (avec locuteurs si la diarisation a tourné)
+DOSSIER_TRANSCRIPTS = os.path.join(BASE_DRIVE, "03_Transcripts")
 
 EXTENSIONS_AUDIO = ('.m4a', '.mp3', '.wav')
 EXTENSIONS_TEXTE = ('.txt', '.vtt', '.srt')
