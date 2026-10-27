@@ -28,10 +28,15 @@ def diariser(audio) -> list:
     if Pipeline is None or not HF_TOKEN:
         print("pyannote ou HF_TOKEN absent : transcription sans locuteurs.")
         return []
-    pipeline = Pipeline.from_pretrained(MODELE_DIARISATION, token=HF_TOKEN)
-    if torch.backends.mps.is_available():
-        pipeline.to(torch.device("mps"))
-    sortie = pipeline({"waveform": torch.from_numpy(audio)[None], "sample_rate": SAMPLE_RATE})
+    try:
+        pipeline = Pipeline.from_pretrained(MODELE_DIARISATION, token=HF_TOKEN)
+        if torch.backends.mps.is_available():
+            pipeline.to(torch.device("mps"))
+        sortie = pipeline({"waveform": torch.from_numpy(audio)[None], "sample_rate": SAMPLE_RATE})
+    except Exception as e:
+        # Accès refusé au modèle, réseau… : on ne jette pas la transcription Whisper déjà faite
+        print(f"Diarisation impossible ({type(e).__name__}: {e}) : transcription sans locuteurs.")
+        return []
     # pyannote 4 : la version "exclusive" (un seul locuteur à la fois) s'aligne mieux sur Whisper
     annotation = getattr(sortie, "exclusive_speaker_diarization", sortie)
     return [(tour.start, tour.end, loc) for tour, _, loc in annotation.itertracks(yield_label=True)]
